@@ -86,6 +86,7 @@ class CBCWithDifferentialCohortWithValue(CohortBuilder):
         query_job.result()
 
 
+# local data at /deep/group/aihc/win23/EHR/CBC_NoSampling_uncleaned.pkl
 class CBCWithDifferentialCohortWithValueNoSampling(CohortBuilder):
     """
     Defines a cohort and labels (result values) for CBC with differential models, with no sampling
