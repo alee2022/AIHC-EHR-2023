@@ -3,6 +3,8 @@ Cohort definitions using STARR (STRIDE) data
 """
 from healthrex_ml.cohorts.cohort import CohortBuilder
 
+# Cohort locally available at /deep/group/aihc/win23/EHR/MPC_NoSampling_uncleaned.pkl
+
 class MetabolicComprehensiveCohortWithValue(CohortBuilder):
     """
     Defines a cohort and labels for metabolic comprehensive tasks
