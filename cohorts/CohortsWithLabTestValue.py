@@ -54,7 +54,7 @@ class MetabolicComprehensiveCohortWithLastValue(CohortBuilder):
         AND
             ord_num_value IS NOT NULL
         AND
-            ord_num_value < 1000
+            ord_num_value < 10000
         ),
         
         index_time_of_last as (
@@ -173,7 +173,7 @@ class CBCWithDifferentialCohortWithLastValue(CohortBuilder):
         AND
             ord_num_value IS NOT NULL
         AND
-            ord_num_value < 1000
+            ord_num_value < 10000
         ),
         
         index_time_of_last as (
