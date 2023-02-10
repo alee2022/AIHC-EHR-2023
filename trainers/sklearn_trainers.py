@@ -15,6 +15,8 @@ from sklearn.metrics import roc_auc_score
 from scipy.sparse import load_npz
 from tqdm import tqdm
 
+import sys
+sys.path.append('../../')
 from healthrex_ml.featurizers import DEFAULT_LAB_COMPONENT_IDS
 from healthrex_ml.featurizers import DEFAULT_FLOWSHEET_FEATURES
 
@@ -219,12 +221,13 @@ class NGBoostTrainer():
         test_MSE = mean_squared_error(Y_pred, y_test[self.task].values)
         test_NLL = -Y_dists.logpdf(y_test[self.task].values).mean()
         print(f"{self.task} MSE Loss: {round(test_MSE, 2)}; NLL Loss: {round(test_NLL, 2)}.")
-
+        task_name = self.task.split('_')[1]
         df_yhats = pd.DataFrame(data={
             'observation_id' : y_test['observation_id'].values,
             'labels': y_test[self.task].values,
+            'last_labels': y_test['label_last_' + task_name].values,
             'predictions': Y_pred,
-            'distribution norm': Y_dists
+            'distribution_norm': Y_dists.std()
         })
         yhats_path = f"{self.task}_yhats.csv"
         df_yhats.to_csv(os.path.join(self.working_dir, yhats_path), index=None)
@@ -365,3 +368,15 @@ class BaselineModelTrainer():
         with open(os.path.join(self.working_dir, f'{self.task}_deploy.pkl'),
                   'wb') as w:
             pickle.dump(deploy, w)
+
+if __name__ == "__main__":
+    
+    from healthrex_ml.trainers import LightGBMTrainer
+    from healthrex_ml.trainers import NGBoostTrainer
+    RUN_NAME = "20230207_baseline_jyx_cbc_withlast"
+    trainer = NGBoostTrainer(working_dir=f"../../{RUN_NAME}_artifacts")
+    tasks = ['label_PLT', 'label_HCT', 'label_WBC', 'label_HGB']
+
+    for task in tasks:
+        print("Predict the task: ", task)
+        trainer(task)
