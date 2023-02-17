@@ -20,6 +20,7 @@ sys.path.append('../../')
 from healthrex_ml.featurizers import DEFAULT_LAB_COMPONENT_IDS
 from healthrex_ml.featurizers import DEFAULT_FLOWSHEET_FEATURES
 
+import xgboost as xgb
 from ngboost import NGBRegressor
 from sklearn.metrics import mean_squared_error
 
@@ -33,7 +34,7 @@ class LightGBMTrainer():
     def __init__(self, working_dir):
         self.working_dir = working_dir
 
-    def __call__(self, task):
+    def __call__(self, task, process_label=False):
         """
         Trains a model against label defined by task
         Args:
@@ -53,6 +54,8 @@ class LightGBMTrainer():
         y_train = pd.read_csv(
             os.path.join(self.working_dir, 'train_labels.csv'))
 
+        if process_label:
+            y_train = self.process_label(task, y_train)
         # Remove any rows with missing labels (for censoring tasks)
         observed_inds = y_train[~y_train[task].isnull()].index
         X_train = X_train[observed_inds]
@@ -80,6 +83,8 @@ class LightGBMTrainer():
         X_test = load_npz(os.path.join(self.working_dir, 'test_features.npz'))
         y_test = pd.read_csv(
             os.path.join(self.working_dir, 'test_labels.csv'))
+        if process_label:
+            y_test = self.process_label(task, y_test)
 
         # Remove censored data from test set
         observed_inds = y_test[~y_test[task].isnull()].index
@@ -92,7 +97,7 @@ class LightGBMTrainer():
                     eval_set=[(X_val, y_val[self.task].values)],
                     eval_metric=['binary', 'auc'],
                     callbacks=[early_stopping(100)],
-                    verbose=1)
+                    verbose=200)
 
         # Predictions
         predictions = self.clf.predict_proba(X_test)[:, 1]
@@ -104,12 +109,20 @@ class LightGBMTrainer():
             'labels': y_test[self.task].values,
             'predictions': predictions
         })
-        yhats_path = f"{self.task}_yhats.csv"
+        yhats_path = f"{self.task}_classification_yhats.csv"
         df_yhats.to_csv(os.path.join(self.working_dir, yhats_path), index=None)
 
         # Generate config file for DEPLOYR
         self.generate_deploy_config()
 
+    def process_label(self, task, labels, thres=0.1):
+        task_name = task.split('_')[1]
+        last_measure = labels['label_last_'+task_name]
+        cur_measure = labels[task]
+        stable_label = ((cur_measure>=(1-thres)*last_measure)&(cur_measure<=(1+thres)*last_measure))
+        labels[task] = stable_label
+        return labels
+    
     def generate_deploy_config(self):
         """
         Generates the config file used by the deployment module.  Contains
@@ -229,7 +242,7 @@ class NGBoostTrainer():
             'predictions': Y_pred,
             'distribution_norm': Y_dists.std()
         })
-        yhats_path = f"{self.task}_yhats.csv"
+        yhats_path = f"{self.task}_regression_yhats.csv"
         df_yhats.to_csv(os.path.join(self.working_dir, yhats_path), index=None)
 
         # Generate config file for DEPLOYR
@@ -280,8 +293,6 @@ class NGBoostTrainer():
         with open(os.path.join(self.working_dir, f'{self.task}_deploy.pkl'),
                   'wb') as w:
             pickle.dump(deploy, w)
-
-
 
 class BaselineModelTrainer():
     """
