@@ -9,7 +9,7 @@ class MetabolicComprehensiveCohortWithLastValue(CohortBuilder):
     """
 
     def __init__(self, client, dataset_name, table_name,
-                 working_project_id='mining-clinical-decisions', sample_size=20000):
+                 working_project_id='mining-clinical-decisions', sample_size=20000, look_back_days=3):
         """
         Initializes dataset_name and table_name for where cohort table will be
         saved on bigquery
@@ -17,7 +17,7 @@ class MetabolicComprehensiveCohortWithLastValue(CohortBuilder):
         super().__init__(client, dataset_name,
               table_name, working_project_id)
         self.sample_size = sample_size
-        self.look_back_days = 7
+        self.look_back_days = look_back_days
 
     def __call__(self):
         """
@@ -124,13 +124,14 @@ class MetabolicComprehensiveCohortWithLastValue(CohortBuilder):
         query_job = self.client.query(query)
         query_job.result()
 
+
 class CBCWithDifferentialCohortWithLastValue(CohortBuilder):
     """
     Defines a cohort and labels (result values) for CBC with differential models
     """
 
     def __init__(self, client, dataset_name, table_name,
-                 working_project_id='mining-clinical-decisions', sample_size=20000):
+                 working_project_id='mining-clinical-decisions', sample_size=20000, look_back_days=3):
         """
         Initializes dataset_name and table_name for where cohort table will be
         saved on bigquery
@@ -138,7 +139,7 @@ class CBCWithDifferentialCohortWithLastValue(CohortBuilder):
         super().__init__(client, dataset_name,
               table_name, working_project_id)
         self.sample_size = sample_size
-        self.look_back_days = 7
+        self.look_back_days = look_back_days
 
     def __call__(self):
         """
@@ -237,7 +238,6 @@ class CBCWithDifferentialCohortWithLastValue(CohortBuilder):
         """
         query_job = self.client.query(query)
         query_job.result()
-        
 
 class MetabolicComprehensiveCohortWithValue(CohortBuilder):
     """
