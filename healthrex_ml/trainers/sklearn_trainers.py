@@ -115,11 +115,14 @@ class LightGBMTrainer():
         # Generate config file for DEPLOYR
         self.generate_deploy_config()
 
-    def process_label(self, task, labels, thres=0.1):
+    def process_label(self, task, labels):
         task_name = task.split('_')[1]
+        task2thres =  {'WBC': 1.75, 'HGB': 1.0, 'HCT': 3.0, 'PLT': 62.5, \
+            'NA': 2.5, 'K': 0.5, 'CR': 0.125, 'CA': 0.525, 'ALB': 0.425} 
         last_measure = labels['label_last_'+task_name]
         cur_measure = labels[task]
-        stable_label = ((cur_measure>=(1-thres)*last_measure)&(cur_measure<=(1+thres)*last_measure))
+        threshold = task2thres[task_name]
+        stable_label = ((cur_measure>=last_measure-threshold)&(cur_measure<=last_measure+threshold))
         labels[task] = stable_label
         return labels
     
@@ -384,7 +387,7 @@ if __name__ == "__main__":
     
     from healthrex_ml.trainers import LightGBMTrainer
     from healthrex_ml.trainers import NGBoostTrainer
-    RUN_NAME = "20230207_baseline_jyx_cbc_withlast"
+    RUN_NAME = "20230218_jyx_cbc"
     trainer = NGBoostTrainer(working_dir=f"../../{RUN_NAME}_artifacts")
     tasks = ['label_PLT', 'label_HCT', 'label_WBC', 'label_HGB']
 

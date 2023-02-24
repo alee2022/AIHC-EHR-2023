@@ -5,9 +5,6 @@ import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
-from glob import glob
-import scipy
-import math
 from sklearn.metrics import (precision_score,
                              recall_score,
                              accuracy_score,
@@ -36,21 +33,21 @@ class BinaryEvaluator:
         }
         os.makedirs(outdir, exist_ok=True)
 
-    def NPV_eval(self, prev_measure, cur_measure, y_mean, y_dist, pred_type='stable', lim_threshold=0.1):
-        upper_lim = prev_measure * (1 + lim_threshold)
-        lower_lim = prev_measure * (1 - lim_threshold)
-        if pred_type == 'stable':
-            binary_labels = ((cur_measure>=lower_lim)&(cur_measure<=upper_lim))
-            prediction_prob = 0.5 * (scipy.special.erf((upper_lim - y_mean)/(math.sqrt(2)*y_dist)) - scipy.special.erf((lower_lim - y_mean)/(math.sqrt(2)*y_dist)))
-        elif pred_type == 'higher':
-            binary_labels = (cur_measure>upper_lim)
-            prediction_prob = 1 - 0.5 * (1 + scipy.special.erf((upper_lim - y_mean)/(math.sqrt(2)*y_dist)))
-        elif pred_type == 'lower':
-            binary_labels = (cur_measure<lower_lim)
-            prediction_prob = 0.5 * (1 + scipy.special.erf((lower_lim - y_mean)/(math.sqrt(2)*y_dist)))
-        else:
-            raise NotImplementedError
-        self(binary_labels, prediction_prob)
+    # def NPV_eval(self, prev_measure, cur_measure, y_mean, y_dist, pred_type='stable', lim_threshold=0.1):
+    #     upper_lim = prev_measure * (1 + lim_threshold)
+    #     lower_lim = prev_measure * (1 - lim_threshold)
+    #     if pred_type == 'stable':
+    #         binary_labels = ((cur_measure>=lower_lim)&(cur_measure<=upper_lim))
+    #         prediction_prob = 0.5 * (scipy.special.erf((upper_lim - y_mean)/(math.sqrt(2)*y_dist)) - scipy.special.erf((lower_lim - y_mean)/(math.sqrt(2)*y_dist)))
+    #     elif pred_type == 'higher':
+    #         binary_labels = (cur_measure>upper_lim)
+    #         prediction_prob = 1 - 0.5 * (1 + scipy.special.erf((upper_lim - y_mean)/(math.sqrt(2)*y_dist)))
+    #     elif pred_type == 'lower':
+    #         binary_labels = (cur_measure<lower_lim)
+    #         prediction_prob = 0.5 * (1 + scipy.special.erf((lower_lim - y_mean)/(math.sqrt(2)*y_dist)))
+    #     else:
+    #         raise NotImplementedError
+    #     self(binary_labels, prediction_prob)
 
     def __call__(self, labels, predictions):
         """
